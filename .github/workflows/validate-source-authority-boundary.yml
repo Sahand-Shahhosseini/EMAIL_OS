@@ -1,0 +1,35 @@
+name: Validate source authority boundary
+
+on:
+  pull_request:
+  push:
+    branches:
+      - governance/source-authority-boundary-v0.2-20260716
+
+permissions:
+  contents: read
+
+jobs:
+  validate-source-authority:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate bounded README contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text = Path('README.md').read_text(encoding='utf-8')
+          required = [
+              'Public repository != private mailbox',
+              'Repository source home != Canon_N',
+              'Email specification != executed mail action',
+              'Airtable projection != Gmail live state',
+              'Draft/triage rule != send/delete permission',
+          ]
+          forbidden = ['Canonical home of the Email-OS family.']
+          missing = [x for x in required if x not in text]
+          bad = [x for x in forbidden if x in text]
+          if missing or bad:
+              raise SystemExit(f'boundary validation failed; missing={missing}; forbidden={bad}')
+          print('source-authority validation PASS_BOUNDED')
+          PY
